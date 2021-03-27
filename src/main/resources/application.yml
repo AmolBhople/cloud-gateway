@@ -1,0 +1,64 @@
+server:
+  port: 8887
+spring:
+  application:
+    name: cloud-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: ORDER-SERVICE
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path= /order/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: ORDER-SERVICE
+                fallbackuri: forward:/orderFallback
+        - id: PAYMENT-SERVICE
+          uri: lb://PAYMENT-SERVICE
+          predicates:
+            - Path= /payment/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: PAYMENT-SERVICE
+                fallbackuri: forward:/paymentFallback
+eureka:
+  client:
+    registered-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone:  http://localhost:8761/eureka
+  instance:
+    hostname: localhost
+
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+          include: '*'
+    shutdown:
+      enabled: false
+    health:
+      show-details: always
+  metrics:
+    web:
+      server:
+        request:
+          autotime:
+            enabled: true
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutinMilliseconds: 5000
+
+logging:
+  file:
+    name: E://springbootLogs//cloud-gateway.log
+
